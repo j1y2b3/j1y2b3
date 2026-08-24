@@ -1,0 +1,73 @@
+# ============================================================
+# GitHub Readme Stats Action
+#
+# 用法：把这个文件放到你的 profile 仓库（j1y2b3/j1y2b3）的
+#       .github/workflows/ 目录下，然后手动触发一次即可。
+#
+# 作用：每天 UTC 0 点（北京时间早上 8 点）自动从 GitHub API
+#       拉取你的数据，生成 4 张静态 SVG（暗色/亮色各一套），
+#       提交到仓库的 profile/ 目录。README 里直接用相对路径
+#       引用这些 SVG。
+# ============================================================
+
+name: Update README cards
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # 每天运行一次（UTC 0 点）
+  workflow_dispatch: # 允许在 Actions 页面手动触发
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write # 允许把生成的 SVG 提交回仓库
+
+    steps:
+      - uses: actions/checkout@v6
+
+      # ---- 1. GitHub Stats 卡片（暗色） ----
+      - name: Generate stats card (dark)
+        uses: stats-organization/github-readme-stats-action@v2
+        with:
+          card: stats
+          options: username=j1y2b3&show_icons=true&include_all_commits=true&hide_border=true&theme=github_dark
+          path: profile/stats-dark.svg
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # ---- 2. GitHub Stats 卡片（亮色） ----
+      - name: Generate stats card (light)
+        uses: stats-organization/github-readme-stats-action@v2
+        with:
+          card: stats
+          options: username=j1y2b3&show_icons=true&include_all_commits=true&hide_border=true&theme=default
+          path: profile/stats-light.svg
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # ---- 3. Top Languages 卡片（暗色） ----
+      - name: Generate top languages card (dark)
+        uses: stats-organization/github-readme-stats-action@v2
+        with:
+          card: top-langs
+          options: username=j1y2b3&layout=compact&hide_border=true&theme=github_dark
+          path: profile/top-langs-dark.svg
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # ---- 4. Top Languages 卡片（亮色） ----
+      - name: Generate top languages card (light)
+        uses: stats-organization/github-readme-stats-action@v2
+        with:
+          card: top-langs
+          options: username=j1y2b3&layout=compact&hide_border=true&theme=default
+          path: profile/top-langs-light.svg
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # ---- 5. 提交所有生成的 SVG ----
+      - name: Commit cards
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add profile/*.svg
+          git commit -m "Update README cards" || exit 0
+          git push
